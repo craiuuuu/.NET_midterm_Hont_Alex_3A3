@@ -165,3 +165,80 @@ Content-Type: application/json
 
 ### 19. Cancel missing booking (expected: 404)
 POST {{baseUrl}}/api/bookings/00000000-0000-0000-0000-000000000001/cancel
+
+### ---------- R9: max 2 active bookings per person per UTC day ----------
+
+### 20. Second room
+# @name createRoom2
+POST {{baseUrl}}/api/rooms
+Content-Type: application/json
+
+{
+  "name": "Study room 2",
+  "capacity": 6
+}
+
+###
+@roomId2 = {{createRoom2.response.body.$.id}}
+
+### 21. elena #1 on 2030-02-01, room 1 (expected: 201)
+POST {{baseUrl}}/api/rooms/{{roomId}}/bookings
+Content-Type: application/json
+
+{
+  "bookedBy": "elena",
+  "startUtc": "2030-02-01T08:00:00Z",
+  "endUtc": "2030-02-01T09:00:00Z",
+  "attendees": 2
+}
+
+### 22. elena #2 same day, room 2 (expected: 201)
+# @name elena2
+POST {{baseUrl}}/api/rooms/{{roomId2}}/bookings
+Content-Type: application/json
+
+{
+  "bookedBy": "elena",
+  "startUtc": "2030-02-01T10:00:00Z",
+  "endUtc": "2030-02-01T11:00:00Z",
+  "attendees": 2
+}
+
+###
+@elena2Id = {{elena2.response.body.$.id}}
+
+### 23. elena #3 same day, room 2 (expected: 409, R9)
+POST {{baseUrl}}/api/rooms/{{roomId2}}/bookings
+Content-Type: application/json
+
+{
+  "bookedBy": "elena",
+  "startUtc": "2030-02-01T14:00:00Z",
+  "endUtc": "2030-02-01T15:00:00Z",
+  "attendees": 2
+}
+
+### 24. elena on another day (expected: 201)
+POST {{baseUrl}}/api/rooms/{{roomId2}}/bookings
+Content-Type: application/json
+
+{
+  "bookedBy": "elena",
+  "startUtc": "2030-02-02T14:00:00Z",
+  "endUtc": "2030-02-02T15:00:00Z",
+  "attendees": 2
+}
+
+### 25. Cancel elena #2
+POST {{baseUrl}}/api/bookings/{{elena2Id}}/cancel
+
+### 26. elena #3 again after cancel (expected: 201, cancelled ones do not count)
+POST {{baseUrl}}/api/rooms/{{roomId2}}/bookings
+Content-Type: application/json
+
+{
+  "bookedBy": "elena",
+  "startUtc": "2030-02-01T14:00:00Z",
+  "endUtc": "2030-02-01T15:00:00Z",
+  "attendees": 2
+}
