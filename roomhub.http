@@ -242,3 +242,72 @@ Content-Type: application/json
   "endUtc": "2030-02-01T15:00:00Z",
   "attendees": 2
 }
+
+### ---------- R10: capacity > 10 => max 2 hours ----------
+
+### 27. Large room (capacity 20)
+# @name createBigRoom
+POST {{baseUrl}}/api/rooms
+Content-Type: application/json
+
+{
+  "name": "Big room",
+  "capacity": 20
+}
+
+###
+@bigRoomId = {{createBigRoom.response.body.$.id}}
+
+### 28. Exactly 2 hours in large room (expected: 201)
+POST {{baseUrl}}/api/rooms/{{bigRoomId}}/bookings
+Content-Type: application/json
+
+{
+  "bookedBy": "florin",
+  "startUtc": "2030-03-01T08:00:00Z",
+  "endUtc": "2030-03-01T10:00:00Z",
+  "attendees": 15
+}
+
+### 29. 3 hours in large room (expected: 400, R10)
+POST {{baseUrl}}/api/rooms/{{bigRoomId}}/bookings
+Content-Type: application/json
+
+{
+  "bookedBy": "george",
+  "startUtc": "2030-03-01T12:00:00Z",
+  "endUtc": "2030-03-01T15:00:00Z",
+  "attendees": 15
+}
+
+### 30. 3 hours in room with capacity 10 (expected: 201, R6 still 4h)
+POST {{baseUrl}}/api/rooms/{{roomId}}/bookings
+Content-Type: application/json
+
+{
+  "bookedBy": "george",
+  "startUtc": "2030-03-01T12:00:00Z",
+  "endUtc": "2030-03-01T15:00:00Z",
+  "attendees": 5
+}
+
+### ---------- R11: cancel only >= 60 minutes before start ----------
+# Change startUtc/endUtc to ~30 minutes from NOW (UTC!) before running 31.
+
+### 31. Booking that starts in ~30 minutes
+# @name soonBooking
+POST {{baseUrl}}/api/rooms/{{roomId2}}/bookings
+Content-Type: application/json
+
+{
+  "bookedBy": "ioana",
+  "startUtc": "2026-11-19T08:15:00Z",
+  "endUtc": "2026-11-19T08:45:00Z",
+  "attendees": 2
+}
+
+###
+@soonId = {{soonBooking.response.body.$.id}}
+
+### 32. Cancel it (expected: 409, R11)
+POST {{baseUrl}}/api/bookings/{{soonId}}/cancel
