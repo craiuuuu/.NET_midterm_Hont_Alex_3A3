@@ -52,4 +52,116 @@ Content-Type: application/json
 ### 7. Cancel booking
 POST {{baseUrl}}/api/bookings/{{bookingId}}/cancel
 
-### 8. Add your own requests here for the rules in ASSIGNMENT.md
+### 8. Cancel again (expected: 409, R8)
+POST {{baseUrl}}/api/bookings/{{bookingId}}/cancel
+
+### 9. Same interval after cancel (expected: 201, R8 frees the interval)
+POST {{baseUrl}}/api/rooms/{{roomId}}/bookings
+Content-Type: application/json
+
+{
+  "bookedBy": "bogdan",
+  "startUtc": "2030-01-10T10:00:00Z",
+  "endUtc": "2030-01-10T12:00:00Z",
+  "attendees": 4
+}
+
+### 10. Touching interval (expected: 201, R7: 12:00-13:00 touches 10:00-12:00)
+POST {{baseUrl}}/api/rooms/{{roomId}}/bookings
+Content-Type: application/json
+
+{
+  "bookedBy": "carmen",
+  "startUtc": "2030-01-10T12:00:00Z",
+  "endUtc": "2030-01-10T13:00:00Z",
+  "attendees": 2
+}
+
+### 11. Exactly 4 hours (expected: 201, R6)
+POST {{baseUrl}}/api/rooms/{{roomId}}/bookings
+Content-Type: application/json
+
+{
+  "bookedBy": "dan",
+  "startUtc": "2030-01-11T08:00:00Z",
+  "endUtc": "2030-01-11T12:00:00Z",
+  "attendees": 2
+}
+
+### 12. More than 4 hours (expected: 400, R6)
+POST {{baseUrl}}/api/rooms/{{roomId}}/bookings
+Content-Type: application/json
+
+{
+  "bookedBy": "dan",
+  "startUtc": "2030-01-12T08:00:00Z",
+  "endUtc": "2030-01-12T12:00:01Z",
+  "attendees": 2
+}
+
+### 13. In the past (expected: 400, R5)
+POST {{baseUrl}}/api/rooms/{{roomId}}/bookings
+Content-Type: application/json
+
+{
+  "bookedBy": "dan",
+  "startUtc": "2020-01-10T10:00:00Z",
+  "endUtc": "2020-01-10T11:00:00Z",
+  "attendees": 2
+}
+
+### 14. Attendees over capacity (expected: 400, R4)
+POST {{baseUrl}}/api/rooms/{{roomId}}/bookings
+Content-Type: application/json
+
+{
+  "bookedBy": "dan",
+  "startUtc": "2030-01-13T10:00:00Z",
+  "endUtc": "2030-01-13T11:00:00Z",
+  "attendees": 11
+}
+
+### 15. End before start (expected: 400, R3)
+POST {{baseUrl}}/api/rooms/{{roomId}}/bookings
+Content-Type: application/json
+
+{
+  "bookedBy": "dan",
+  "startUtc": "2030-01-13T11:00:00Z",
+  "endUtc": "2030-01-13T10:00:00Z",
+  "attendees": 2
+}
+
+### 16. Missing bookedBy (expected: 400, R2)
+POST {{baseUrl}}/api/rooms/{{roomId}}/bookings
+Content-Type: application/json
+
+{
+  "bookedBy": "  ",
+  "startUtc": "2030-01-14T10:00:00Z",
+  "endUtc": "2030-01-14T11:00:00Z",
+  "attendees": 2
+}
+
+### 17. Booking on a missing room with invalid body (expected: 404 before validation)
+POST {{baseUrl}}/api/rooms/00000000-0000-0000-0000-000000000001/bookings
+Content-Type: application/json
+
+{
+  "bookedBy": "",
+  "startUtc": "2030-01-14T10:00:00Z",
+  "endUtc": "2030-01-14T09:00:00Z",
+  "attendees": 0
+}
+
+### 18. Invalid room (expected: 400, R1)
+POST {{baseUrl}}/api/rooms
+Content-Type: application/json
+
+{
+  "name": "",
+  "capacity": 0
+}
+
+### 19. Cancel missing booking (expected: 404)
+POST {{baseUrl}}/api/bookings/00000000-0000-0000-0000-000000000001/cancel

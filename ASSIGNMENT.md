@@ -1,4 +1,3 @@
-
 # Midterm: RoomHub (study room bookings)
 
 **Duration: 70 minutes** = **60 minutes of coding** (AI allowed) + **10 minutes of paper quiz**, no laptop (see "Grading" and "AI rules").
